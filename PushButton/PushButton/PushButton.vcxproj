@@ -11,10 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{153EC53B-5CE9-4891-8A9B-DFA9F0F2DFF0}</ProjectGuid>
+    <ProjectGuid>{68868CBD-E3D0-4161-8664-0EDB5420D059}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>HelloBlinky</RootNamespace>
-    <ProjectName>Pushbutton</ProjectName>
+    <RootNamespace>PushButton</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -98,6 +97,6 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\Microsoft.IoT.Galileo.Arduino.1.0.4-alpha\build\native\Microsoft.IoT.Galileo.Arduino.targets" Condition="Exists('..\packages\Microsoft.IoT.Galileo.Arduino.1.0.4-alpha\build\native\Microsoft.IoT.Galileo.Arduino.targets')" />
+    <Import Project="..\packages\Microsoft.IoT.Galileo.Arduino.1.0.6-alpha\build\native\Microsoft.IoT.Galileo.Arduino.targets" Condition="Exists('..\packages\Microsoft.IoT.Galileo.Arduino.1.0.6-alpha\build\native\Microsoft.IoT.Galileo.Arduino.targets')" />
   </ImportGroup>
 </Project>

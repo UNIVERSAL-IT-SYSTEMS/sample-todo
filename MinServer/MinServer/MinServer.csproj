@@ -63,12 +63,6 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\OnenoteApp\OnenoteApp\OnenoteApp.csproj">
-      <Project>{3b8d8124-7330-4bca-ac02-df898a86360d}</Project>
-      <Name>OnenoteApp</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

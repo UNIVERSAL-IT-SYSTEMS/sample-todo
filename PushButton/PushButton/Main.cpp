@@ -1,4 +1,3 @@
-
 #include "stdafx.h"
 #include "arduino.h"
 #include "SockWrite.h"
@@ -7,7 +6,7 @@
 int _tmain(int argc, _TCHAR* argv[])
 {
 	return RunArduinoSketch();
-	
+
 }
 
 const int buttonPin = 2;     // the number of the pushbutton pin
@@ -32,15 +31,15 @@ void loop(){
 	if (buttonState == HIGH) {
 		// turn LED on:    
 		digitalWrite(ledPin, HIGH);
-		
+
 	}
 	else {
 		// turn LED off:
 		digitalWrite(ledPin, LOW);
 		Log(L"Pushbutton pressed .. \n");
 		char msg[] = "hello server - i am a galileo client and this is my message.";
-		SockWriteOnce(L"169.254.130.199", 8080, (BYTE *)msg, _countof(msg));
+		SockWriteOnce(L"MyPC", 8080, (BYTE *)msg, _countof(msg));
 		Sleep(5000);
-	    
-		}
+
+	}
 }
