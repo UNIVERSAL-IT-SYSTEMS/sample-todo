@@ -14,11 +14,8 @@ int _tmain(int argc, _TCHAR* argv[])
     return RunArduinoSketch();
 }
 
-const int buttonPin = 2;     // the number of the pushbutton pin
-
-// variables will change:
-int buttonState = 0;         // variable for reading the pushbutton status
-
+const int buttonPin = 2;     
+int buttonState = 0;         
 OneNoteHelper *One;
 std::list<std::wstring> skipIDs;
 MinSerClass * msc = nullptr;
