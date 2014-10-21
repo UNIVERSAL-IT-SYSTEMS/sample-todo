@@ -263,7 +263,7 @@ void MinSerClass::PrtfLog(wchar_t *ctrlp, ...)
     if (buffer != NULL)
     {
         len = vswprintf_s(buffer, len, ctrlp, marker);
-        wprintf(buffer);
+        //wprintf(buffer);
         if (IsDebuggerPresent()) OutputDebugStringW(buffer);
         delete[](buffer);
     } else {

@@ -138,7 +138,6 @@ void MinHttpGP::MinHttpSendRecv(_In_ MinHttpGPType Method, _In_ PCWSTR pcwszUrl,
         PrtfLog(L"Response text len = %u\n", spXhrCallback->_respStr.length());
         if (_showlog && spXhrCallback->_respStr.length() > 0) {
             OutputDebugStringA(spXhrCallback->_respStr.c_str());
-            std::cout << spXhrCallback->_respStr.c_str() << std::endl;
         }
     }
 
@@ -157,7 +156,6 @@ void MinHttpGP::PrtfLog(_In_ const wchar_t *ctrlp, ...)
     if (buffer != NULL)
     {
         len = vswprintf_s(buffer, len, ctrlp, marker);
-        wprintf(buffer);
         if (IsDebuggerPresent()) OutputDebugStringW(buffer);
         delete[](buffer);
     }
