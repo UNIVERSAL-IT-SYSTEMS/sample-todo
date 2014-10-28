@@ -37,6 +37,16 @@ void MinHttpGP::TextToFile(const char *txt, int txtsz, wchar_t *fname)
     f_tmp.close();
 }
 
+const wchar_t * MinHttpGP::GetLastErrorToString(DWORD err)
+{
+    static wchar_t msgbuf[1024];
+    if (err == 0) err = GetLastError();
+    _stprintf_s(msgbuf, _countof(msgbuf), _T("Err=0x%08X:"), err);
+    int n = (int)_tcslen(msgbuf);
+    FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, err, LANG_USER_DEFAULT, &(msgbuf[n]), _countof(msgbuf) - n, NULL);
+    return msgbuf;
+}
+
 void MinHttpGP::MinHttpSendRecv(_In_ MinHttpGPType Method, _In_ PCWSTR pcwszUrl, _Inout_ BOOL *pfRetry, _Inout_ struct CertSaves *pCertSaves, _Inout_ std::string *respStr)
 {
     HRESULT hr = S_OK;
@@ -125,15 +135,15 @@ void MinHttpGP::MinHttpSendRecv(_In_ MinHttpGPType Method, _In_ PCWSTR pcwszUrl,
 
     if (FAILED(hr))
     {
-        PrtfLog(L"MinHttpGP %s FAILED, Error code = 0x%08x.\n", (Method == Get ? L"GET" : L"POST"), hr);
+        PrtfLog(L"MinHttpGP %s FAILED, HRESULT = 0x%08x. %s\n", (Method == Get ? L"GET" : L"POST"), hr, GetLastErrorToString(hr));
         if (spXhrCallback != nullptr) PrtfLog(L"%s\n", spXhrCallback->_hdrStr.c_str());
     }
         
-    if (spXhrCallback != nullptr && (spXhrCallback->_respStr.length() > 0))
+    if (spXhrCallback != nullptr)
     {
         PrtfLog(L"--------------------------------------------------\n");
         PrtfLog(L"%s %s\n", (Method == Get ? L"GET" : L"POST"), pcwszUrl);
-        PrtfLog(L"Status Code = %u.\n", dwStatus);
+        PrtfLog(L"Status Code = %u. HRESULT=0x%08X %s\n", dwStatus, hr, GetLastErrorToString(hr));
         PrtfLog(L"%s\n", spXhrCallback->_hdrStr.c_str());
         PrtfLog(L"Response text len = %u\n", spXhrCallback->_respStr.length());
         if (_showlog && spXhrCallback->_respStr.length() > 0) {

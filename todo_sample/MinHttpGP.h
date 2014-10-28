@@ -20,6 +20,7 @@ struct CertSaves {
 
 class MinHttpGP {
 private:
+    const wchar_t * MinHttpGP::GetLastErrorToString(DWORD err);
     void TextToFile(const char *txt, int txtsz, wchar_t *fname);
     enum MinHttpGPType { Get, Post };
     void MinHttpGP::MinHttpSendRecv(
