@@ -21,6 +21,9 @@ std::list<std::wstring> skipIDs;
 MinSerClass * msc = nullptr;
 int idlecount = 0;
 
+const char trailer[] = "\r\n\r\n\r\n----------\r\n\r\n\r\n";
+BYTE byteBuf[2048];
+
 void PostToDo(void)
 {
     // get current time
@@ -55,9 +58,9 @@ bool PrintToDo(bool force)
         // Print it
         One->StripMarkup(respStr);
         if (msc->Open(L"\\\\.\\COM2") == S_OK) {
-            const char trailer[] = "\r\n\r\n\r\n----------\r\n\r\n\r\n";
             respStr += trailer;
-            msc->SchedWrite((BYTE*)respStr.c_str(), respStr.length());
+            strcpy_s((char*)byteBuf, _countof(byteBuf), respStr.c_str());
+            msc->SchedWrite(byteBuf, respStr.length());
             int ok = msc->WaitToComplete(10000);
         }
     }
