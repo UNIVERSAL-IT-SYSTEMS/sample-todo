@@ -21,6 +21,9 @@ std::list<std::wstring> skipIDs;
 MinSerClass * msc = nullptr;
 int idlecount = 0;
 
+const char trailer[] = "\r\n\r\n\r\n----------\r\n\r\n\r\n";
+BYTE byteBuf[2048];
+
 void PostToDo(void)
 {
     // get current time
@@ -45,22 +48,24 @@ void PostToDo(void)
 
 bool PrintToDo(bool force)
 {
-    // Read a page
-    char * p = One->PageRead(NULL, 0, skipIDs);
+    std::string respStr;
 
-    if (force || (p != NULL && *p != 0))
+    // Read a page
+    One->PageRead(respStr, skipIDs);
+
+    if (force || respStr.length())
     {
         // Print it
-        One->StripMarkup(One->_buf, _countof(One->_buf));
+        One->StripMarkup(respStr);
         if (msc->Open(L"\\\\.\\COM2") == S_OK) {
-            const char trailer[] = "\r\n\r\n\r\n----------\r\n\r\n\r\n";
-            strcat_s(One->_buf, _countof(One->_buf), trailer);
-            msc->SchedWrite((BYTE*)One->_buf, strlen(One->_buf));
+            respStr += trailer;
+            strcpy_s((char*)byteBuf, _countof(byteBuf), respStr.c_str());
+            msc->SchedWrite(byteBuf, respStr.length());
             int ok = msc->WaitToComplete(10000);
         }
     }
 
-    return (p != NULL && *p != 0);
+    return (respStr.length() != 0);
 }
 
 
@@ -71,7 +76,7 @@ void setup()
     One = new OneNoteHelper();
     One->_showLog = true;
     One->OpenNotebook(NULL, NULL, L"TODO", NULL);
-    One->GetPageIDs(NULL, 0, skipIDs);
+    One->GetPageIDs(skipIDs);
     msc = new MinSerClass();
 
 }

@@ -12,20 +12,23 @@ public:
     std::wstring value;
 };
 
+struct CertSaves {
+    DWORD CertIgnoreFlags;
+    DWORD cIssuerList;
+    const WCHAR ** IssuerList;
+};
+
 class MinHttpGP {
 private:
+    const wchar_t * MinHttpGP::GetLastErrorToString(DWORD err);
     void TextToFile(const char *txt, int txtsz, wchar_t *fname);
     enum MinHttpGPType { Get, Post };
     void MinHttpGP::MinHttpSendRecv(
         _In_ MinHttpGPType Method,
         _In_ PCWSTR pcwszUrl,
         _Inout_ BOOL *pfRetry,
-        _Inout_ DWORD *pdwCertIgnoreFlags,
-        _Inout_ DWORD *pcIssuerList,
-        _Inout_ const WCHAR ***prgpwszIssuerList,
-        _Inout_ char *respbuf,
-        _In_ ULONG bufsize,
-        _Out_ ULONG *pnRead
+        _Inout_ struct CertSaves *pCertSaves,
+        _Inout_ std::string *respStr
         );
 
     const char * _pcstrContent;
@@ -40,6 +43,6 @@ public:
     MinHttpGP();
     ~MinHttpGP();
 
-    void MinHttpGP::GetRqst(_In_ WCHAR *url, _In_ std::list<NameValuePair> *HeaderVals, _Inout_ char *replybuf, _In_ ULONG bufsize, _Out_ ULONG * nread);
-    void MinHttpGP::PostRqst(_In_ WCHAR *url, _In_ std::list<NameValuePair> *HeaderVals, _In_ const char *content, _Inout_ char *replybuf, _In_ ULONG bufsize, _Out_ ULONG * nread);
+    void MinHttpGP::GetRqst(_In_ WCHAR *url, _In_ std::list<NameValuePair> *HeaderVals, _Inout_ std::string *respStr);
+    void MinHttpGP::PostRqst(_In_ WCHAR *url, _In_ std::list<NameValuePair> *HeaderVals, _In_ const char *content, _Inout_ std::string *respStr);
 };

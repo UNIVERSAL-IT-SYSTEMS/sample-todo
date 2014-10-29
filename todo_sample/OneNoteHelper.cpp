@@ -22,8 +22,6 @@ void OneNoteHelper::OpenNotebook(_In_ const wchar_t *Notebook, _In_ const wchar_
         ReadAuthFile(L"$auth$.txt", AuthStr);
         if (AuthStr.length() > 0) _AuthCode.assign(AuthStr);
     }
-
-    // ToDo:  Maintain valid auth-code with Authentication Server
 }
 
 void OneNoteHelper::CloseNotebook(void) 
@@ -62,7 +60,7 @@ const char * OneNoteHelper::FindTitleId(_In_ const char *Content, _In_ std::wstr
             p = strstr(p, "\"title\":\"");
             if (p == NULL) return NULL;
             p += 9;
-            if (strncmp(p, title.c_str(), title.length()) == 0) break;
+            if (_strnicmp(p, title.c_str(), title.length()) == 0) break;
         }
     }
     p = strstr(p, "\"id\":\"");
@@ -75,6 +73,27 @@ const char * OneNoteHelper::FindTitleId(_In_ const char *Content, _In_ std::wstr
     return p;
 }
 
+int OneNoteHelper::ParseErrorCode(_Inout_ std::string &respStr)
+{
+
+    size_t pos = respStr.find("\"error\":");
+    if (pos == std::string::npos) return 0;
+    pos += 8;
+    
+    pos = respStr.find("\"code\":\"", pos);
+    if (pos == std::string::npos) return 0;
+    pos += 8;
+
+    std::string ecode;
+    ecode.clear();
+    while (pos < respStr.length()) {
+        char ch = respStr[pos++];
+        if (ch == '"') break;
+        ecode += ch;
+    }
+    return atol(ecode.c_str());
+}
+
 bool OneNoteHelper::MemberOf(std::wstring &id, std::list<std::wstring> &set)
 {
     for each (std::wstring s in set) {
@@ -83,14 +102,9 @@ bool OneNoteHelper::MemberOf(std::wstring &id, std::list<std::wstring> &set)
     return false;
 }
 
-char * OneNoteHelper::GetPageIDs(_Inout_ char *buffer, _In_ unsigned long bufsz, std::list<std::wstring> &skipIDs)
+void OneNoteHelper::GetPageIDs(std::list<std::wstring> &pageIDs)
 {
-    if (buffer == NULL || bufsz < 1)
-    {
-        buffer = _buf;
-        bufsz = _countof(_buf);
-    }
-    *buffer = 0;
+    pageIDs.clear();
 
     NameValuePair nvp;
     nvp.name = L"Authorization";
@@ -98,35 +112,29 @@ char * OneNoteHelper::GetPageIDs(_Inout_ char *buffer, _In_ unsigned long bufsz,
     std::list<NameValuePair> Headers;
     Headers.push_back(nvp);
 
-    unsigned long nrread;
     MinHttpGP *gp = new MinHttpGP();
     gp->_showlog = _showLog;
     if (_AuthCode.length() < 1) gp->PrtfLog(L"WARN: NO Authorization code specified\n");
 
-    // first enumerate all page IDs in default notebook, to build appropriate '../api/Beta/pages/{ID}/content' URI
-    gp->GetRqst(L"https://www.onenote.com/api/beta/pages", &Headers, buffer, bufsz, &nrread);
-    if (nrread == 0) return buffer;
+    std::string respStr;
+    gp->GetRqst(L"https://www.onenote.com/api/beta/pages", &Headers, &respStr);
+    if (respStr.length() < 1) return;
 
-    // Get entry matching page
     std::wstring pageId = L"";
-    const char *p = buffer;
+    const char *p = respStr.c_str();
     for (;;)
     {
-        if (p == NULL || *p == 0) return S_OK;
+        if (p == NULL || *p == 0) break;
         p = FindTitleId(p, _Page, pageId);
-        skipIDs.push_back(pageId);
+        if (pageId.length() != 0) {
+            pageIDs.push_back(pageId);
+        }
     }
-    return buffer;
 }
 
-char * OneNoteHelper::PageRead(_Inout_ char *buffer, _In_ unsigned long bufsz, std::list<std::wstring> &skipIDs)
+void OneNoteHelper::PageRead(_Inout_ std::string &respStr, std::list<std::wstring> &readIDs)
 {
-    if (buffer == NULL || bufsz < 1)
-    {
-        buffer = _buf;
-        bufsz = _countof(_buf);
-    }
-    *buffer = 0;
+    respStr.clear();
 
     NameValuePair nvp;
     nvp.name = L"Authorization"; 
@@ -134,54 +142,58 @@ char * OneNoteHelper::PageRead(_Inout_ char *buffer, _In_ unsigned long bufsz, s
     std::list<NameValuePair> Headers;
     Headers.push_back(nvp);
 
-    unsigned long nrread;
     MinHttpGP *gp = new MinHttpGP();
     gp->_showlog = _showLog;
     if (_AuthCode.length() < 1) gp->PrtfLog(L"WARN: NO Authorization code specified\n");
 
-    // first enumerate all page IDs in default notebook, to build appropriate '../api/Beta/pages/{ID}/content' URI
-    gp->GetRqst(L"https://www.onenote.com/api/beta/pages", &Headers, buffer, bufsz, &nrread);
-    if (nrread == 0) return buffer;
+    // enumerate all page IDs in default notebook, to build appropriate '../api/Beta/pages/{ID}/content' URI
+    gp->GetRqst(L"https://www.onenote.com/api/beta/pages", &Headers, &respStr);
+    if (respStr.length() < 1) return;
 
     // Get entry matching page
     std::wstring pageId = L"";
-    const char *p = buffer;
+    const char *p = respStr.c_str();
     for (;;)
     {
         if (p == NULL || *p == 0) {
-            *buffer = 0;
-            return buffer;
+            respStr.clear();
+            return;
         }
         p = FindTitleId(p, _Page, pageId);
-        if (!MemberOf(pageId, skipIDs)) break;
+        if (!MemberOf(pageId, readIDs)) break;
     }
     _OneNoteUri = L"https://www.onenote.com/api/beta/pages/" + pageId + L"/content";
-    skipIDs.push_back(pageId); // add this one to ones read already
+    readIDs.push_back(pageId); // add this one to ones read already
 
     // get and return reply in buffer
-    gp->GetRqst((WCHAR*)_OneNoteUri.c_str(), &Headers, buffer, bufsz, &nrread);   
-
-    return buffer;
+    int pageErr = 0;
+    for (int tries = 0; tries < 5; ++tries)
+    {
+        gp->GetRqst((WCHAR*)_OneNoteUri.c_str(), &Headers, &respStr);
+        pageErr = ParseErrorCode(respStr);
+        if (pageErr == 0) break;
+        gp->PrtfLog(L"WARN: Error with page request = %u\n", pageErr);
+        Sleep(5000); // settle time - give OneNote time to finish with any newly added contents on this page - and retry
+    }
 }
 
-char * OneNoteHelper::PageRead(_Inout_ char *buffer, _In_ unsigned long bufsz)
+void OneNoteHelper::PageRead(_Inout_ std::string &respStr)
 {
     std::list<std::wstring> skipIDs;
     skipIDs.clear();
-    return (PageRead(buffer, bufsz, skipIDs));
+    PageRead(respStr, skipIDs);
 }
 
 
-void OneNoteHelper::StripMarkup(_Inout_ char *buffer, _In_ unsigned long bufsz)
+void OneNoteHelper::StripMarkup(_Inout_ std::string &respStr)
 {
-    if (buffer == NULL || bufsz < 1) return;
-
     std::string s;
     s.clear();
     bool skip = false;
     bool skipbin = false;
-    char *p = buffer;
-    for (unsigned long x = 0; x < bufsz && *p != 0; ++x, ++p)
+
+    size_t x = 0;
+    for (const char * p = respStr.c_str(); *p != 0 && x < respStr.length(); ++p, ++x)
     {
         if (*p == '<')
         {
@@ -200,11 +212,11 @@ void OneNoteHelper::StripMarkup(_Inout_ char *buffer, _In_ unsigned long bufsz)
         {
             if (skipbin) s += "\n";
             skipbin = false;
-            if (!skip && !skipbin) s += *p;
+            if (!skip) s += *p;
         }
     }
     s += "\n\n";
-    strcpy_s(buffer, bufsz, s.c_str());
+    respStr = s;
 }
 
 HRESULT OneNoteHelper::PageWrite(_Inout_ const char *content) 
@@ -221,13 +233,12 @@ HRESULT OneNoteHelper::PageWrite(_Inout_ const char *content)
     nvp.value = L"Text/Html";
     Headers.push_back(nvp);
 
-    unsigned long nrread;
     MinHttpGP *gp = new MinHttpGP();
     gp->_showlog = _showLog;
     if (_AuthCode.length() < 1) gp->PrtfLog(L"WARN: NO Authorization code specified\n");
 
     _OneNoteUri = L"https://www.onenote.com/api/v1.0/pages"; // creates new page in "Quick Notes" section of default notebook
-    gp->PostRqst((WCHAR*)_OneNoteUri.c_str(), &Headers, content, NULL, 0, &nrread);
+    gp->PostRqst((WCHAR*)_OneNoteUri.c_str(), &Headers, content, NULL);
 
     return S_OK;
 }

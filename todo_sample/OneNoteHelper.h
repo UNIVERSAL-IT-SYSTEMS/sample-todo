@@ -19,14 +19,15 @@ private:
 
 public:
     bool _showLog;
-    char _buf[50 * 1024];
 
     OneNoteHelper();
     void OpenNotebook(_In_ const wchar_t *Notebook, _In_ const wchar_t * Section, _In_ const wchar_t * Page, _In_ const wchar_t * AuthCode);
     void CloseNotebook(void);
-    char * PageRead(_Inout_ char *buffer, _In_ unsigned long bufsz);
-    char * PageRead(_Inout_ char *buffer, _In_ unsigned long bufsz, std::list<std::wstring> &skipIDs);
-    char * GetPageIDs(_Inout_ char *buffer, _In_ unsigned long bufsz, std::list<std::wstring> &skipIDs);
+    void PageRead(_Inout_ std::string &respStr);
+    void PageRead(_Inout_ std::string &respStr, std::list<std::wstring> &readIDs);
+    void GetPageIDs(std::list<std::wstring> &pageIDs);
     HRESULT PageWrite(_Inout_ const char *content);
-    void StripMarkup(_Inout_ char *buffer, _In_ unsigned long bufsz);
+    void StripMarkup(_Inout_ std::string &respStr);
+    int ParseErrorCode(_Inout_ std::string &respStr);
+
 };
