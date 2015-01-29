@@ -1,3 +1,7 @@
+// Copyright(c) Microsoft Open Technologies, Inc. All rights reserved. 
+// Licensed under the BSD 2 - Clause License. 
+// See License.txt in the project root for license information. 
+
 #pragma once
 #include <Windows.h>
 
@@ -5,26 +9,26 @@ class MinSerClass
 {
 
 public:
-	MinSerClass();
-	~MinSerClass();
+    MinSerClass();
+    ~MinSerClass();
 
     HRESULT MinSerClass::Open(wchar_t *ComPortName, long baud = 9600, int par = 'N', int dat = 8, int stop = 1, unsigned Flags = 0);
     void Close(void);
-	void SchedWrite(BYTE *buf, int len, DWORD timeout = 1000);
-	void SchedRead(BYTE *buf, int bufsz, DWORD timeout = 1000);
+    void SchedWrite(BYTE *buf, int len, DWORD timeout = 1000);
+    void SchedRead(BYTE *buf, int bufsz, DWORD timeout = 1000);
 
     bool IoComplete(void);
     int WaitToComplete(DWORD msecs);
 
-	bool IoBusy (void);
+    bool IoBusy (void);
     int  WaitToIdle(DWORD msecs);
 
     void FlushOutput(void);
 
 private:
-	// library control
-	bool _workthread_active;
-	bool _showlog;
+    // library control
+    bool _workthread_active;
+    bool _showlog;
     HANDLE _ThreadWaitObj;
 
     static DWORD WINAPI WorkThread(_In_  LPVOID lpParameter);

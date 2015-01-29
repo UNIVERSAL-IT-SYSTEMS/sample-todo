@@ -1,4 +1,6 @@
-
+// Copyright(c) Microsoft Open Technologies, Inc. All rights reserved. 
+// Licensed under the BSD 2 - Clause License. 
+// See License.txt in the project root for license information. 
 
 #include <windows.h>
 #include <wincrypt.h>
@@ -230,8 +232,8 @@ MinXHttpRqstPostStream::~MinXHttpRqstPostStream()
 
 STDMETHODIMP MinXHttpRqstPostStream::Open(_In_opt_ PCWSTR pcwszFileName)
 {
-	if (pcwszFileName == NULL || *pcwszFileName == L'\0') return E_INVALIDARG;
-	HANDLE hFile = CreateFile(pcwszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (pcwszFileName == NULL || *pcwszFileName == L'\0') return E_INVALIDARG;
+    HANDLE hFile = CreateFile(pcwszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hFile == INVALID_HANDLE_VALUE) return HRESULT_FROM_WIN32(GetLastError());
     _hFile = hFile;
     return S_OK;
@@ -240,17 +242,17 @@ STDMETHODIMP MinXHttpRqstPostStream::Open(_In_opt_ PCWSTR pcwszFileName)
 STDMETHODIMP MinXHttpRqstPostStream::Read(_Out_writes_bytes_to_(cb, *pcbRead) void *pv, ULONG cb, _Out_opt_  ULONG *pcbRead)
 {
     if (pcbRead != NULL) *pcbRead = 0;
-	if (pv == NULL || cb == 0) return E_INVALIDARG;
+    if (pv == NULL || cb == 0) return E_INVALIDARG;
 
-	DWORD cbRead = 0;
-	BOOL fSuccess = ReadFile(_hFile, pv, cb, &cbRead, NULL);
+    DWORD cbRead = 0;
+    BOOL fSuccess = ReadFile(_hFile, pv, cb, &cbRead, NULL);
     if (!fSuccess)
     {
         DWORD dwError = GetLastError();
         if (dwError != ERROR_HANDLE_EOF) return HRESULT_FROM_WIN32(dwError);
     }
 
-	HRESULT hresult = S_OK;
+    HRESULT hresult = S_OK;
     if (cbRead < cb) hresult = S_FALSE;
     if (pcbRead != NULL) *pcbRead = cbRead;
     return hresult;
