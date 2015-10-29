@@ -1,4 +1,4 @@
-#TODO Sample on Galileo
+#TODO Sample on Raspberry Pi 2
 
 ## Contents
 - [Components](#components)
